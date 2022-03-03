@@ -1,0 +1,53 @@
+
+FROM debian:stable-slim
+
+RUN apt update && apt install -y \
+    wget \
+    libgtk-3-dev \
+    libgtkextra-dev \
+    libgconf2-dev \
+    libnss3 \
+    libasound2 \
+    libxtst-dev \
+    libxss1 \
+    libx11-6 \
+    libx11-xcb-dev \ 
+    x11vnc \
+    xvfb \
+    curl \
+    apt-transport-https \
+    build-essential \
+    ca-certificates \
+    git \
+    libssl-dev \
+    wget
+
+# ganache
+RUN wget https://github.com/trufflesuite/ganache-ui/releases/download/v2.5.4/ganache-2.5.4-linux-x86_64.AppImage \
+    -O ganache.AppImage \
+    && chmod +x ./ganache.AppImage \
+    && ./ganache.AppImage --appimage-extract \
+    && rm ./ganache.AppImage
+
+EXPOSE 7545
+
+# VNC
+RUN mkdir ~/.vnc && x11vnc -storepasswd 1234 ~/.vnc/passwd
+EXPOSE 5900
+
+# NVM
+ENV NVM_DIR /root/.nvm
+ENV NODE_VERSION 16.13.2
+
+# Install nvm with node and npm
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash \
+    && source $NVM_DIR/nvm.sh \
+    && nvm install $NODE_VERSION \
+    && nvm alias default $NODE_VERSION \
+    && nvm use default
+
+ENV NODE_PATH $NVM_DIR/v$NODE_VERSION/lib/node_modules
+ENV PATH      $NVM_DIR/v$NODE_VERSION/bin:$PATH
+
+# ENTRYPOINT ["./squashfs-root/AppRun"]
+CMD ["x11vnc", "-forever", "-usepw", "-create"]
