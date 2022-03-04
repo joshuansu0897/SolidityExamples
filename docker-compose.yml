@@ -1,17 +1,17 @@
 version: '3.8'
 
 services:
-  ganache:
-    build: 
-      context: ./
-      dockerfile: ./docker/Dockerfile-ganache-ui
-    tty: true
-    ports:
-      - 7545:7545
-      - 5900:5900
-    volumes: 
-      - ./:/home/node/app
-      - /home/node/app/node_modules
+  # ganache:
+  #   build: 
+  #     context: ./
+  #     dockerfile: ./docker/Dockerfile-ganache-ui
+  #   tty: true
+  #   ports:
+  #     - 7545:7545
+  #     - 5900:5900
+  #   volumes: 
+  #     - ./:/home/node/app
+  #     - /home/node/app/node_modules
 
   app:
     build: 
@@ -21,3 +21,9 @@ services:
     volumes: 
       - ./:/home/node/app
       - /home/node/app/node_modules
+
+  remix:
+    image: remixproject/remix-ide:latest
+    ports:
+      - 8080:80
+    tty: true
