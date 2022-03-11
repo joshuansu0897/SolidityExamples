@@ -92,4 +92,93 @@ contract Cinema is ERC20, Ownable {
         // send ether to customer
         payable(msg.sender).transfer(getPriceByTokens(_tokens));
     }
+
+    // company management
+
+    // events
+    event movie_watched(string, uint256, address);
+    event movie_new(string, uint256);
+    event movie_deleted(string);
+
+    // data structure to store movie information
+    struct Movie {
+        string name;
+        uint256 price;
+        bool status;
+    }
+
+    // Map to store movie information
+    mapping(string => Movie) public Movies;
+
+    // array to store movie names
+    string[] MovieNames;
+
+    // incorporate movie into the Cinema
+    function addMovie(string memory _name, uint256 _price) public onlyOwner {
+        // validate movie name
+        require(!Movies[_name].status, "Movie already exists");
+
+        // save movie information
+        Movies[_name] = Movie(_name, _price, true);
+
+        // save movie name
+        MovieNames.push(_name);
+
+        // emit event
+        emit movie_new(_name, _price);
+    }
+
+    // remove movie from the Cinema
+    function removeMovie(string memory _name) public onlyOwner {
+        // remove movie information
+        Movies[_name].status = false;
+
+        // emit event
+        emit movie_deleted(_name);
+    }
+
+    // customer management
+
+    // function to watch movie and pay with tokens ERC20
+    function watchMovie(string memory _name) public {
+        // validate movie name
+        require(Movies[_name].status, "Movie does not exist");
+
+        // validate customer tokens
+        require(
+            balanceOf(msg.sender) >= Movies[_name].price,
+            "Insufficient tokens"
+        );
+
+        // send tokens to smart contract
+        _transfer(msg.sender, address(this), Movies[_name].price);
+
+        // save transaction information
+        Customers[msg.sender].movies_watched.push(_name);
+
+        // emit event
+        emit movie_watched(_name, Movies[_name].price, msg.sender);
+    }
+
+    // information storage
+
+    // function to visualize the movie history
+    function getMovieHistory(address _user)
+        public
+        view
+        returns (string[] memory)
+    {
+        return Customers[_user].movies_watched;
+    }
+
+    // function to visualize avilable movies
+    function getAvailableMovies() public view returns (string[] memory) {
+        return MovieNames;
+    }
+
+    // Extraction of wei from the smart contract
+    function withdraw() external payable onlyOwner {
+        address payable _owner = payable(owner());
+        _owner.transfer(address(this).balance);
+    }
 }
